@@ -1,0 +1,17 @@
+@font-face {
+  font-family: 'Mexcellent';
+  src: url('/assets/fonts/Mexcellent.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+body {
+  margin: 0;
+  background: radial-gradient(circle, #222, #000);
+  font-family: 'Segoe UI', sans-serif;
+}
+canvas {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+}
