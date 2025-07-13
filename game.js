@@ -12,7 +12,7 @@ export function startGame() {
   const bg = new PIXI.Sprite(PIXI.Assets.get('background'));
   app.stage.addChild(bg);
 
-  // 🪩 Створюємо Welcome після завантаження кастомного шрифта
+  // Create Welcome after custom font is loaded
   let neonText;
   document.fonts.load('64px Mexcellent').then(() => {
     neonText = new PIXI.Text('Welcome', {
@@ -60,7 +60,7 @@ export function startGame() {
     reels.push(reel);
   }
 
-  // 🔘 Кнопка SPIN
+  // SPIN Button
   const spinButton = new PIXI.Container();
 
   const buttonBg = new PIXI.Graphics();
@@ -122,11 +122,11 @@ function layout() {
   layout();
   window.addEventListener('resize', () => {
     app.renderer.resize(window.innerWidth, window.innerHeight);
-    layout(); // викликає оновлення з актуальними розмірами
+    layout(); // call layout on resize
   });
 
 
-  // 🔄 Пульсація кнопки
+  // Button blinking effect
   PIXI.Ticker.shared.add(() => {
     if (!isSpinning) {
       blinkPhase += 0.05;
@@ -139,7 +139,7 @@ function layout() {
     }
   });
 
-  // 🎰 Обробка натискання SPIN
+  // SPIN Button press handler
   spinButton.on('pointerdown', () => {
     if (isSpinning) return;
 
@@ -149,21 +149,21 @@ function layout() {
     let reelsStopped = 0;
 
     reels.forEach((reel, i) => {
-      // ❌ Скидання попередньої анімації
+      // Reset previous winning animation
       const prevSprite = reel.symbols.find(s => {
         const y = s.y + reel.symbolsContainer.y;
         return Math.abs(y) < reel.symbolHeight * 0.6;
       });
       if (prevSprite) reel.stopWinningAnimation(prevSprite);
 
-      // ✅ Обробка зупинки барабану
+      // Reel stop handler
       reel.onStop = () => {
         reelsStopped++;
 
         if (reelsStopped === reels.length) {
           isSpinning = false;
 
-          // 🎯 Виграш тільки якщо threeBars у центрі середнього барабану
+          // Win if three bars in the center
           const centerSprites = reels.map(r => {
             return r.symbols.find(s => {
               const y = s.y + r.symbolsContainer.y;
