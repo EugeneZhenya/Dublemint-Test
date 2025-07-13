@@ -1,6 +1,6 @@
 import { Reel } from './Reel.js';
 import * as PIXI from 'pixi.js';
-import { DropShadowFilter } from '@pixi/filter-drop-shadow';
+import { PositionManager } from './PositionManager.js';
 
 export function startGame() {
   const app = new PIXI.Application({
@@ -13,8 +13,9 @@ export function startGame() {
   app.stage.addChild(bg);
 
   // 🪩 Створюємо Welcome після завантаження кастомного шрифта
+  let neonText;
   document.fonts.load('64px Mexcellent').then(() => {
-    const neonText = new PIXI.Text('Welcome', {
+    neonText = new PIXI.Text('Welcome', {
       fontFamily: 'Mexcellent',
       fontSize: 64,
       fill: 0x00ffff,
@@ -66,7 +67,6 @@ export function startGame() {
   buttonBg.beginFill(0xffdd66);
   buttonBg.drawRoundedRect(-80, -30, 160, 60, 12);
   buttonBg.endFill();
-  buttonBg.filters = [new DropShadowFilter({ color: 0x000000, blur: 4, distance: 4, alpha: 0.5 })];
 
   const buttonText = new PIXI.Text('SPIN', {
     fontFamily: 'Arial',
@@ -85,29 +85,46 @@ export function startGame() {
   let isSpinning = false;
   let blinkPhase = 0;
 
-  function layout() {
-    const reelWidth = app.screen.width / 8;
-    const reelHeight = app.screen.height * 0.45;
+  const positioner = new PositionManager(app);
 
-    reels.forEach((reel, i) => {
-      reel.resize(reelWidth, reelHeight);
-      reel.x = i * reelWidth + reelWidth / 2;
-      reel.y = 0;
-    });
+function layout() {
+  positioner.updateOrientation();
 
-    slotMachine.x = app.screen.width / 2 - (reelWidth * reelCount) / 2;
-    slotMachine.y = app.screen.height / 2;
+  const { width: reelW, height: reelH } = positioner.getReelSize();
+  const { width: bgW, height: bgH } = positioner.getBackgroundSize();
+  const { x: neonX, y: neonY, fontSize } = positioner.getNeonPosition();
+  const { x: spinX, y: spinY } = positioner.getSpinButtonPosition();
+  const { x: slotX, y: slotY } = positioner.getSlotMachinePosition(reelW, reelCount);
 
-    bg.width = app.screen.width;
-    bg.height = app.screen.height;
+  bg.width = bgW;
+  bg.height = bgH;
 
-    spinButton.x = app.screen.width / 2;
-    spinButton.y = app.screen.height - 60;
-    buttonText.y = 0;
+  if (neonText) {
+    neonText.x = neonX;
+    neonText.y = neonY;
+    neonText.style.fontSize = fontSize;
   }
 
+  reels.forEach((reel, i) => {
+    reel.resize(reelW, reelH);
+    reel.x = i * reelW + reelW / 2;
+    reel.y = 0;
+  });
+
+  slotMachine.x = slotX;
+  slotMachine.y = slotY;
+
+  spinButton.x = spinX;
+  spinButton.y = spinY;
+}
+
+
   layout();
-  window.addEventListener('resize', layout);
+  window.addEventListener('resize', () => {
+    app.renderer.resize(window.innerWidth, window.innerHeight);
+    layout(); // викликає оновлення з актуальними розмірами
+  });
+
 
   // 🔄 Пульсація кнопки
   PIXI.Ticker.shared.add(() => {
@@ -128,7 +145,7 @@ export function startGame() {
 
     isSpinning = true;
     spinCount++;
-    console.log(`SPIN #${spinCount}`);
+
     let reelsStopped = 0;
 
     reels.forEach((reel, i) => {
